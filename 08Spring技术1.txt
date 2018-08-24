@@ -1,0 +1,92 @@
+1 , 使用注解配置bean
+	只是使用注解来配置bean , 并不是说所有的都是由注解完成
+	
+	注意 : 
+		1) 使用注解配置bean 要扫描
+			context-scan
+		2) 使用注解时 , 可以不配置名字 , 默认使用类名首字母小写
+		3) 使用注解时 , 配置名字 , 直接在 () 中添加名字即可
+
+2 , 具体的使用
+	1) 导入aop包 
+		面向切面编程 , 面向切面的需要用到动态代理的技术
+	2) 在主配置文件导入新的命名空间 , 因为我们要使用新的标签
+		<context:component-scan : 组件扫描
+	3) 在具体的类中使用注解
+		(1) 将对象交给spring创建
+			component("名字") 任何组件都可以使用的
+				因为觉得没有体现三层架构的思想 , 所有另外开发了三个代替的
+			controller("名字")
+			service("名字");
+			repository("名字"); 仓库的意思
+			
+		(2) 对象的作用范围
+			@scope(scopename = "property")
+		
+		(3) 注入
+			
+			属性上注入 与 在set()方法上注入的区别
+				通过反射暴力注入 \ 通过反射调用对应的方法设入
+		
+			值类型注入
+				在需要注入的属性上 @value("值");
+				在对应属性的set()方法上 @value("值");	
+					
+			引用注入
+				1)在需要注入的属性上 @autowired
+					如果有多个对应类型的
+					可以再加一个 qualifier() --> 合格的意思
+					
+				2)在需要注入的属性上 @resource(name = "car") 手动注入指明注定的car
+				
+				
+3 , spring与junit整合
+	1) 导包 , 需添加test包
+	2) 配置注解
+		(1) @Runwith(SpringJUnit4ClassRunner.class)
+			在类名上配置 , 帮我们创建Spring容器 , 创建容器的时候 , 会将里面配置的bean创建出来
+			
+		(2) @ContextCofiguration("classpath:applicationContext.xml");
+			指定创建容器时使用哪一个配置文件
+			
+	3) 使用时还需要配合Junit测试使用
+			
+		
+				
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
+			

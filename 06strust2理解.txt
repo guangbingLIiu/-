@@ -1,0 +1,414 @@
+1,第一个strust2项目的搭建
+	1)建项目
+		创建项目的时module版本选择2.5 , 看是否与strust2的版本相关
+	2)导包
+		策略 : 找到官方提供的模板项目中的jar包
+		找到提供的strust2的所有包 , 解压第一个blank项目 , 找到里面的lib jar包copy到项目中
+		关于如何解压 , 弄一个解压软件 , 选中右键是没有解压的选项的 . 
+			需要双击打开后 , 点击上方图片"解压到..."
+	
+	3)创建Action类
+		就是一个普通的Action类
+	4)在src目录下 , 创建strust.xml文件
+		因为没有strust.xml插件 , 所有需要手动导入约束 ... 
+		怎么手动导入约束呢 ? 
+			打开官方提供的案例 , 找到路径下的strust.xml文件 , 复制里面的约束
+	5)在web.xml文件中配置 filter 标签 , 拦截器
+	
+2 , 关于主配置文件
+	1)<package标签中有很多action标签>
+		name : 给包起个名字 , 为之后继承做准备
+		namespace : 相当于访问这个action要在action名字前面添加包的命名空间 
+			简单起见 : /
+		extends : 可以继承其他包
+			简单起见直接继承strust-default
+	
+	2)<action标签>
+		name : 决定访问Action资源名
+		class : 完整的类名
+		method : 决定访问这个action中哪一个方法
+	
+	3)<result标签> 执行完action后的处理标签
+		name : 与action方法返回值对应
+		type : 调用哪个result类处理结果 , 默认使用转发 , 转发到jsp页面
+		标签体 : 如果是使用转发的话 , 填写页面的相对路径
+	
+	4)引入其他strust配置文件
+		其他配置文件按照默认来配置就行
+		直接引入 , 路径根据src目录下相对路径来填写即可
+	
+3 , 常量配置
+	1) 官方提供的常量参考在struts-corejar --> 第一个原始包下
+	2) 常量配置的位置 , 在package上面
+		为什么在package上面呢 ? 因为常量不仅仅只是针对一个package的 
+		既然是常量 , 肯定是针对所有的package
+	3) 具体常量的配置
+		(1) 国际化 \ 解决post乱码
+		(2) 指定访问的action时的后缀
+		(3) 指定strust2是否以开发模式运行
+			什么时开发模式 ? 
+				热加载主配置
+				提供更多的错误信息
+				
+		(4) 配置动态方法调用 , 并支持通配符
+			注意具体的action的配置 : 
+				action名字用 _* 连接
+				method使用占位符 {1} : 表示前面 * 的内容 对应 后面的方法
+				
+4 , 关于默认配置
+	1)配置一个默认的 action 
+		当在对应的包下找不到对应的action时 , 走的是默认的action
+		
+	2) 关于<action标签的默认配置
+		(1) 没有默认的action名字 , 必须配置一个action名字
+		(2) 默认的class类 , ActionSupport类
+		(3) method 默认的execute方法
+	3) 关于<result标签的默认配置
+		(1) 默认的name为success
+		(2) 默认的type为转发 dispatch
+		(3) 路径没有默认
+			
+5 , 关于Action类的书写
+	1) 可以光零零的Action
+	2) 可以实现Action接口
+	3) 推荐使用继承 ActionSupport类
+	
+6 , 注意
+	package标签 , 如果不这是namespace , 就不设置这个属性
+		或者设置 / 
+	在eclipse中尽量不要直接复制项目 , 因为会出很多问题
+	
+7 , 结果跳转方式
+	1) 转发到jsp页面
+	2) 转发到action
+	3) 重定向到jsp页面
+	4) 重定向到action
+	
+8 , 关于Action类中访问ServletApi
+
+	0) ActionContext是一个map集合 
+		这个集合中以键值对的形式 , 存放了很多的数据 request \ session \ applicati等
+
+	1) strust设计是不希望访问原生的servletAPI
+		因为 , 做数据存储 , 有其他更好的方法
+		做转发 \ 挑战 , strust有更友好的方式 , 在<result标签可以处理
+	
+	2) 如何将数据存放在各个作用域中
+		(1)request作用域
+			ActionContext.getContext().put();
+		(2)session域
+			Map<> sessionMap = ActionContext.getContext().getSession();
+		(3)application域
+			Map<> applicationMap = Action.getContext().getApplication();
+
+9 , 关于Action获取页面参数
+
+	0) 基于封装性的考虑 , 所有属性都设置为private , 并提供get \ set方法
+
+	1) Action生命周期
+		每次请求过来都会创建一个全新的Action , 所以针对每次请求来说是一个线程
+		并且是线程安全的 , 因为每次请求都只有一个线程
+		Servlet是线程不安全的 , 不同用户访问同一个Servlet时 , 只有一个Servlet实例
+	
+	2) 正是因为Action是线程安全的 , 所以可以用成员变量接收数据
+		与Servlet的区别 , 一般来说 , 可以把servic层的对象创建在成员变量的位置 , 
+		因为每一个请求过来时 , 都会创建一个全新的Action
+	
+	3) 如何将页面的参数给到action
+		(1) 属性驱动 , 针对Action的属性是普通的参数来说
+			页面提交什么参数 --> action有对应的属性
+			特别的页面提交String date , 可以直接使用Date类型来封装
+		(2) 对象驱动 , 针对Action的属性是一个对象来说
+			页面User.name 
+			Action中属性放置一个对应 User 对象 , 最后都创建实例 , 因为Stustr2并不会创建实例工厂
+			有没有new都无所谓的 , 都会通过反射来创建对应的实例
+			但是一定要有get \ set方法 , 因为通过反射会调用get\set方法
+		(3) 模型驱动
+			实现 ModelDriver接口
+			重写 getModel方法
+				方法直接返回Action的User实例
+			在Action属性中放置一个User实例 , 并创建对象
+			
+	4) 集合型参数封装
+		相当于直接将页面的参数 , 封装到集合中 
+			与上面的属性相对应 --> 上面是将页面数据存放在对象容器中
+			这个是将页面数据放在集合容器中
+			
+10 , 当有相同的jar包时 , 删除相同的jar包
+	
+11 , 关于ognl表达式
+	1) 要想使用ognl表达式 , 首先需要准备一个ognl容器
+	2) ognlContext(容器)由两个容器组成
+		root 部分 : 也是一个容器 , 专门用来存储对象的
+		context 部分 : 是一个Map集合
+		
+	3) 表达式语法
+		(1)基本取值 : 取出的都是具体的基本数据类型值 , 或者说是属性值 , 没有说找到引用数据类型的 , 相当于按照指针找到对应的值
+			取出root中对象的值: 
+				因为root中存放的是一个对象
+				所以取出root里面对象的属性值 --> "name" \ "age"
+			取出context里面map集合中某一个对象的属性值
+				#user1 --> map中的键 , 找到对应的对象
+				#user1.name --> 找到对应对象的对应属性值
+				
+		(2)赋值 : 就是在取值的基础上 = '值' 
+			赋值的时候 , 只能赋值给到基础数据类型 , 如果是一个对象 , 那么要一直往下找 , 直到找到基础数据类型
+			给root里面的一个对象的一个属性赋值
+				name = 'rose' // 这是赋值为字符串的格式 , 要想使用这种格式赋值 , 就要把字符串拼接成这个样子
+				age = 15	// 赋值为int数据类型的格式
+				
+			给context容器中的Map中的一个对象赋值
+				#user1 --> 找到这个对象
+				#user1.name --> 找到这个对象的一个属性
+				
+		(3)调用方法 : 可以把方法看作是特殊的字段
+			调用root里对象中的一个方法
+				setAge(12)
+				
+		(4)创建list \ map集合
+			注意 : 可以光创建一个集合 \ 但是不能在之后取值 , 只能在创建集合的同时立马取值
+					如果先创建集合 , 再通过一个ognl表达式取值 , 是不成功的
+					
+				创建集合没有说创建集合的时候 , 没有说创建在root , 创建在context中的说法 
+					我认为默认是创建在root这个容器中 , 相当于创建后 , 立马弹出root栈出去了
+						
+			创建一个特殊的对象 : 一个集合对象
+				list集合 : 
+					{'aa' , 'bb' , 'cc' }[2] --> 创建的同时取值	
+				Map集合 : 
+					#{'gec' : '广州' , 'age' , 16}['age']
+					
+12 , Ognl表达式 与 strust2结合
+	1) 结合原理 :
+		ognl容器需要两部分 : ognlContext --> valueStack
+			root : 在strust2 中升级为值栈 --> 默认把当前线程Action对象放入root中
+			context : --> ActionContext (这个本来就是Map , 有request \ session \ application)
+					
+		valueStack : 
+			当前Action对象
+			ActionConetext Map集合
+		
+		既然strust2的valueStack中root部分是一个栈 --> 那么在查找属性的时候 
+			是查找属性 , 不是查找对象 : 关于ognl表达式都是查找属性值的
+	
+	2) 结合的具体体现
+		当前端页面发送数据到后台服务器的时候 , 首先是params拦截器做拦截 , 然后要将数据给到ognl处理
+		所以前端页面传参的时候 , name的写法写的是ognl表达式 , 并且写的是赋值表达式
+			因为默认是将当前Action对象当作ognlContext容器的root , 所以赋值的时候不用指定当前action
+			直接指定Action中的属性 , 如果是一个对象 , 直到找到基础数据类型
+			
+		(1) 前端页面参数接收
+			
+			属性驱动
+				直接是属性名称即可
+			对象驱动
+				找到对应对象的基础数据类型
+			模型驱动
+				原理 : 在前端页面的参数要想传入参数到后台服务器
+					默认是将Action作为root中的对象
+					但是可以调用一个方法 , 在前端页面传入参数赋值之前 , 将其他的对象压入栈顶 , 那么前端页面相当于给新的对象赋值
+
+				相当于属性驱动 与 对象驱动相结合
+				(1)前端页面的写法与 属性驱动 保持一致
+				(2)Action要重写一个prepare()方法 , 这个方法会在执行处理逻辑方法之前调用
+					在prepare()方法中 将指定的对象压入栈顶
+				(3)之后前端页面的数据会设入到对象中
+		
+		(2) 接收配置文件中的参数
+		
+			将配置文件中的参数传到服务器中
+				在<action标签中设置 parame标签 , name的值填写ognl表达式 , 然后在Action中设置对应的属性 , 牢记当前Action是root对象
+			在配置文件中接收参数
+				接收标签是在<result标签下面的<parame标签中
+				当然这个标签可以设置重定向 \ 转发的事情
+				
+				如何在重定向的时候携带参数 ? 
+					原理 : strust会把不认识的param标签 name 属性放置在重定向的后面
+					如果要想加入变量值 , 可以通过ognl表达式来获取Action root 中的属性值
+					<parame name = "age">${age}<parame/>
+					
+		(3) 前端页面request.getAttribute()方法获取参数时的顺序
+			request作用域
+			root部分 , 也就是当前Action对象
+			context部分 , 也就是ActionContext map集合
+			
+13 , 总结
+	1) 怎么传参数到后台服务器
+		传参的时候 , 关键是前端页面的name属性 , name属性的值为ognl表达式
+		传什么参数 , 在后台Action类中填写对应的属性就行
+		
+	2) 前端页面怎么从后台获取数据
+		把数据都放在ognl容器中的root部分
+		牢记当前Action是root对象
+		前端页面要想找到具体的数据 , 使劲...找到具体的基本数据就行
+		
+	3) 重定向的时候怎么从后台拿到参数
+		通过result标签下的param标签来设置参数
+		重定向的时候 , 会将参数附带在链接后
+		<param标签的标签体也是ognl表达式
+		
+	4) 怎么将配置文件的参数给到后台服务器
+		通过Action标签下的param标签设置参数 , 注意name属性的设置 , 是ognl表达式
+		
+14 , 拦截器
+	1) 拦截器是采用责任链的设计模式
+		责任链首先是有一个Filter接口 , 然后所有的拦截器都是实现Filter接口
+		关键是通过递归方法调用去实现
+		
+	2) 创建拦截器的实现类
+		(1) 实现Intercepter接口
+		(2) 继承abstractIntercepter抽象类
+		(3) 主要的创建方式 : 
+			实现MethodFilterInterceptor接口 , 因为这个可以定义哪些方法拦截 \ 哪些方法放行
+	
+	3) 拦截器实现类中具体的实现
+		
+		如何判断放行 \ 不放行
+			通过if来判断 , if判断的依据从哪里来 ? 
+				可以通过ActionContext获得各种作用域中的值 , 以此来判断是否有某个值
+	
+		放行 : invoke()方法为放行 , 并且有返回值 , 执行invoke()方法就是放行了
+			那么放行的时候如何return呢 ? return invoke()方法的返回值
+		不放行 : 直接return 字符串, 跳转到<result>标签 , 交给Result处理结果
+			也不会执行后续的拦截器 \ Action , 直接到页面了
+			
+	4) 创建好实现类之后 , 还需要配置拦截器
+		相当于配置拦截器链的顺序
+		不存在单独使用某一个拦截器 , 最小的使用单元是拦截器栈
+		
+		0) 拦截器的配置都是在针对package的 , 都在package标签下面
+		00) 在package标签下 , <interceptes/>标签下面
+			注册一个拦截器
+			配置一个拦截器栈 , 并把上面的拦截器加入到拦截器栈当中
+				加入的时候 , 默认的拦截器殿后
+		000) 配置在哪里使用这个拦截器栈
+			可以使用在package下面 --> 配置当前包的默认拦截器
+			也可以使用在action下面 --> 针对某一个action配置具体的拦截器栈
+		
+		(1) 注册拦截器 , 告诉strust2这里有个拦截器
+		(2) 配置拦截器栈 , 相当于配置拦截器拦截的顺序
+		(3) 决定包走哪个拦截器栈 \ 决定Action走哪个拦截器栈
+	
+	5) 定制哪些方法走拦截器 \ 哪些方法不走拦截器 , 只能二选一
+		在拦截器栈中 , 加入这个拦截器的时候 , 可以设置参数 , 哪些方法拦截 \ 哪些方法放行
+			<param name="excludeMethods">add,delete</param> -->
+				<!-- 指定哪些方法需要拦截 -->
+			<param name="includeMethods">add,delete</param>
+	
+	6) 全局结果集处理
+		(1) 只要有任何方法返回值是 toLogin , 如果配置了全局result处理页面 , 都会交给这个result处理
+		(2) 配置异常映射页面页面
+			当某个action出现某个 / 某类异常时 , 应该统一的给到某个结果集处理
+				如果按照常规的处理模式 , 配置return返回值 , 如果没有异常时 , 不好返回 , 所以应该同意的配置一个result结果集处理
+				那么应该使用映射的方式
+				在上面指定出现异常时 , 应该交给那个result结果集处理
+			映射的是 , 当程序出出现某个异常时 , 映射给那个结果集处理
+		
+	
+15 , 总结
+	1) struts.xml文件的一般布局
+		一般默认给每一个Action配置一个package , 因为有关拦截器的配置是属于<package标签的
+		struts.xml配置文件 , 最小的单位是以package为单位的 , 除了常量的配置属于全局的
+		
+	2) 每一个package标签中包含
+		拦截器的相关配置
+		配置全局的结果集处理
+		配置异常映射页面页面
+		配置Action
+			配置result结果处理页面
+			
+	3) 关于服务器后台返回错误信息
+	
+		1) 错误信息通过exception机制传输到前端页面
+			一般来说 , 在需要给到前端页面错误信息的时候 , 抛出一个RuntimeException("错误提示消息")
+			然后配置一个当有异常时 , 全部跳转到某个result结果集处理
+			当然这个result结果集处理应该配置成一个全局的result结果集处理
+			最后 , 在前端页面使用 s标签 <s:property value="exception.message"
+				这个strust标签 , value写的是ongl表达式 , 因为struts的机制是当发生异常时 ,
+				会将exception信息存储到当前root (ExceptionHandler对象中) , 在这个对象中有个exception对象 , exception对象中有一个message属性
+			
+		2) 错误友好提示信息 , 也可以通过Action设置错误信息来表达
+			首先 , 在Action中设置 this.addError("错误消息");
+			然后可以转发到其他页面
+			最后在前端页面中用特有的 <s:actionerror取出action中配置的错误信息>
+		
+	4) struts中的 <s:properties value = "ognl表达式" />	专门与ognl表达式配合使用
+
+	5) El表达式很强大 , ${默认会从各个作用域中取出对象}
+		所以当Action作用域有pageBean对象时 , 依然可以读取出来
+		
+	6) 关于hibernate中session 与 事务的处理
+		(1) openSession() 在同一个线程不同的地方获得的session对象是不同的
+			currentSession() 只要在同一个线程上 , 那么获得的Session对象是相同的
+			
+		(2) 使用同一个session打开的事务 , 得到的tx也是相同的 , 这点很重要!!!
+		
+		(3) 关于增删改 , 需要提交事务的
+			只要获得session , 获得事务 , 最后提交事务即可
+			
+		(4) 在过滤器中
+			获得同一个线程的session
+			获得同一个session的同一个事务tx
+			统一开启事务
+			放行
+			提交事务 ! 提交事务的时候 , 会关闭session!!!!
+			
+		(5) 在service \ dao层
+			要想使用事务 , 只要获得事务 , 在放生异常的情况下 回滚 即可
+			因为开启事务 与 提交事务在过滤器中做了
+	
+			
+		
+		
+		
+		
+			
+			
+		
+	
+		
+				
+				
+		
+			
+
+			
+			
+				
+				
+		
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		
+				
+		
+
+			
+		

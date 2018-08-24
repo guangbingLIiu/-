@@ -1,0 +1,98 @@
+HQL查询
+	1) 单表查询
+		from Customer
+		query.list
+		
+	2) 条件查询
+		from Customer where customer_name = :customer_name
+		query.setParament();
+		query.list / query.uniqueResult
+		
+	3) 分页查询
+		在条件查询的基础上
+		query.setFirst()
+		query.setMax()
+		query.list
+		
+Criteria查询 : 依赖于session创建
+	1) 单表
+		session.createCriteria(Customer)
+		criteria.list
+		
+	2) 条件查询
+		criteria.add(Restrict.eq) / criteria.add(Restrict.like) / criteria.add(Restrict.isID)
+		criteria.uniqueResult()
+	
+	3) 分页查询
+		criteria.setFirst
+		criteria.setMax
+		
+	4) 查询总数
+		之前在设置条件后 , 直接使用criteria获得查询结果
+
+		createCriteria.setProjection(Projections.rowCount());
+		
+		这次是在中间多设置了一层参数 , 指明获得是一个long类型总数
+		
+离线查询 : 凭空创建 , 当然也是依赖于DetachedCriteria
+	1) DetachedCriteria = DetachedCriteria.forClass(Customer.class);
+	2) 添加条件
+		至此 , 这个附加了条件的离线查询对象创建好了
+	
+	3) 将这个离线查询对象传递到dao层
+		理解session的作用 , session是打开事务 \ 获得查询对象的 , 他是一个老总 , 不干具体的活
+		
+	4) 通过离线查询对象 与 session结合 --> 查询对象Criteria
+		Criteria criteria = DetachedCriteria.getSession();
+		
+		(1) 离线查询 不是 标准查询的子类 , 或者实现类
+			其实Criteria是一个接口 , 每次session获得的是接口的实现类
+			
+		(2) 离线查询中 有 标准查询 , 可以通过方法获得标准查询实现类
+		
+总结 : 
+	在hibernate中 , 具体能够查询的对象只有三种
+		HQL查询 , 多表查询
+		criteria 标准查询 , 单表查询
+			离线查询对象 DetachedCriteria是依附于Criteria的 
+			离线查询对象仅仅只是封装了查询条件而已 , 并不是一真正的查询对象
+			
+			(1) 在hibernate中如何利用hibernate
+			
+		sql查询 , 应对复杂查询
+	
+
+关于查询优化 : 这个属于高级内容
+	1) 原则
+		get方式没有任何加载策略 , 调用就要立即去数据库查询数据
+		
+		load方式才能谈加载策略
+		
+	2) 针对加载策略的优化 , 无论是单表查询 \ 多表查询都有用的
+	
+	3) 默认使用的是懒加载
+		懒加载会产生一个问题 , 最后的数据是在前端页面获取的 , 所以会出现no - session异常
+	4) 目前解决办法 
+		在映射文件中 , 类标签上 , lazy = "false" 关闭懒加载
+		根本不需要什么配置拦截器类的东西
+			
+		
+		
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	
+	
+		
+	

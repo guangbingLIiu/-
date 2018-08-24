@@ -1,0 +1,149 @@
+1 , 整合的原理
+	1) spring与strust2的整合 , 将Action交给spring管理 , 创建与维护
+	2) spring与hibernate的整合
+		(1) 将sessionFactory交给spring管理 --> 产生session对象的
+		(2) 不是使用hibernate的事务管理 , 而是使用springAop技术管理事务
+		
+2 , 导包
+	1) hibernate :
+		hibernate.required包
+		hibernate持久化规范接口包
+		数据库驱动
+		
+	2) struts2 : 
+		struts2 blank / lib
+		整合spring的插件包
+		
+	3) spring
+		(1) 基本的 4 + 2 
+			core + bean + context + expression + logging + log4j
+		(2) web包
+			spring-web
+		(3) aop包 4个
+		(4) hibernate \ 事务4个
+		(5) 测试包 junit包
+			spring-text
+	4) 标签库
+		standard
+		jstl
+		
+3 , 单独配置spring
+	1) 创建spring主配置文件
+	2) 在web.xml中配置监听器
+		配置读取applicationContext.xml文件的位置
+
+4 , 单独配置struts2
+	1) 配置struts2.xml文件
+	2) 在web.xml中配置拦截器
+	
+5 , 整合spring与struts2
+	之前的action对象都是由struts框架使用基本的反射来创建
+	现在需要把action交给spring来创建
+
+	1) 在struts2.xml中配置常量
+		<constant name="struts.objectFactory" value = "spring"
+	
+	2) 整合方案
+		(1) action由spring来创建
+			通过注解来配置bean
+			通过xml来配置bean
+		
+		(2) 在strust.xml中
+			关于class属性的设置 == beanid
+			
+6 , 单独配置hibernate
+	1) 导入实体类 \ orm元数据 , 就是实体类 与 数据库表单的映射关系
+	2) 配置hibernate.cfg.xml主配置文件
+		(1) 配置连接数据库的驱动 \ 用户名 \ 密码
+		(2) 配置连接数据库的方言
+		(3) 是否将hibernate生成的sql语句打印到控制台 , 已经打印的格式
+		(4) 自动建表 , update \ create
+		(5) 引入实体配置文件
+	
+7 , spring整合hibernate
+	就是将sessionFactory交给spring管理 \ 配置一个sessionFactory的bean即可
+	这个是springSessionFactory --> localSessionFacotryBean , 是spring主包下的jar
+	里面封装了hibernate中的sessionFactory
+	
+	1) 方式一 , 保留hibernate主配置文件
+		(1) 只是在spring主配置文件中配置<sessionFactory>bean
+		(2) 告诉sessionFactory bean hibernate.cfg.xml主配置文件在哪里
+		
+	2) 方式二 , 不保留hibernate主配置文件
+		<bean sessionFactory
+			关于这个的配置 , 完全是复杂类型注入 , properties
+			<property name = hibernateProperties
+				<props
+					连接数据库的驱动 \ 用户名 \ 密码
+					连接数据库的方言
+					打印hibernate生成的sql语句 \ 格式
+					自动建表
+					引入实体配置文件
+					<prop key 
+					
+8 , spring整合c3po连接池
+	1) 外部配置文件
+	2) <context标签 引入外部文件
+	3) <bean datasource C3P0连接池的bean
+	4) 将连接池放入session Factory中
+	
+9 , spring整合hibernate创建dao层实现类
+	理解 : 之前spring整合了最基础的jdbc操作数据库创建dao层 , 这次是整合hibernateDaoSupport创建Dao层操作数据库
+		spring操作数据库的核心还是针对不同的操作数据平台提供了各种模板
+		这次是整合hibernate
+	
+	1) dao层实现类继承hibernateDaoSupport , 之前是继承JDBCDaoSupport
+	2) getHibernateTemple.execute()方法
+	3) 配置dao层实现类bean
+	4) 在dao层实现类中注入sessionFactory
+	
+10 , springAop事务
+	理解 : 总的来说 , spring的事务是由hibernate管理
+	
+	1) 配置hibernate核心事务管理 , 并将hibernate的session Factory注入到核心事务管理器中
+		之前单独使用hibernate时 , 注入的是数据源
+		
+	2) xml配置aop事务
+		(1) <tx : advice
+			配置spring中的增强 , 并将核心事务管理器注入
+		(2) <aop : config
+				<aop : pointcut
+					配置切点 , 使用切点表达式
+				<aop : advisor
+					配置切面 , 直接引入上方增强 \ 切点
+					
+	
+	3) 注解配置aop事务
+		1) 打开注解配置事务开关
+			之前是打开注解配置bean
+			打开注解配置aop开关
+			这次是打开注解配置aop事务开关
+		2) 在需要事务的类上 , transaction注解
+			在特定的方法上使用差异性的 transaction注解
+			
+11 , 扩大懒加载时 , no - sission问题
+	1) 添加一个filter : open SessionInView
+	2) 关于filterMapping 拦截器映射
+		只要有了struts拦截器 , 那么自己配置的拦截器应该在struts拦截器之前调用
+		在web.xml中 , 拦截器的调用规则是 , 从上往下调用
+	
+		
+	
+	
+				
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

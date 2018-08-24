@@ -1,0 +1,229 @@
+1 , 概念相关
+	
+	ClassPath : 从类路径加载
+		如果放在src目录下 , 那么与类路径同级 , applicationContext.xml
+		如果放在某个包下 , 那么路径为相对类路径 , com.gec.test.applicationContext.xml
+
+	spring可以通过反射创建各种bean对象 , 所以说是一个容器 , 使用map集合形式存储 , id , Bean
+	
+	aop支持
+	aop事务
+	ioc思想
+	di
+	spring jdbc
+		jdk jdbc : 
+			1) 注册驱动获得连接 
+				可以使用连接池 , 然后从连接池中获得连接
+			2) 获得语句执行平台
+			3) 结果处理
+			
+2 , 搭建项目
+	1) 导包
+		(1)spring官方提供的jar包分为两部分
+			一个是spring的核心包
+			一个是spring提供的其他支持包 , 比如apache组织的包
+		
+		(2) 具体导包 
+			导入核心包
+			导入apache commons logging 日志包
+	
+	2) 新建一个bean类
+		可以说 , spring 最基础 \ 最核心的是管理bean
+	
+	3) 创建主配置文件
+		applicationContext.xml
+		在里面配置一个bean
+		
+	4) 测试
+		创建容器对象 , 通过容器对象获得bean对象
+
+3 , spring 与 创建 \ 管理 Bean相关的思想
+
+	关键 : 要想spring完成该对象的注入 , 必须把该对象交给spring管理
+
+	ioc思想 : bean对象的创建 \ 依赖关系的注入交给spring管理
+	di技术 : 当创建好对象后 , 对象属性的值应该怎么设置
+		ioc思想是一个大的思想 , Di只是一个技术
+		ioc思想的实现 , 需要Di技术的支持 , 总的来说 , IOC思想需要用到DI技术
+		
+		注入方式 : 
+			set 注入
+			构造器注入
+		注入类型 : 
+			值注入
+			对象注入
+			
+4 , 创建Spring容器对象
+	1) 使用beanFactory创建
+		只有当使用到某个类时 , 创建对象
+	
+	2) 从类路径下加载配置文件
+		ClassPathApplicationContext
+		当创建容器的时候 , 就会创建容器中配置的所有对象
+	
+	3) 从硬盘中绝对路径加载配置文件
+		FileSystemXmlApplicationContext
+		
+5 , bean标签 : 就是创建对象
+	
+	1) <bean>
+		names属性 : 标识这个bean , 可以重复 \ 可以使用特殊字符
+			推荐使用
+		id属性 : 标识这个bean , 不可以重复 \ 不可以使用特殊字符
+		正是因为之前使用id不方便 , 才使用了name属性
+		
+		scope属性 : 
+			singleton , 单例模式 , 在容器中只有一个对象 , 容器创建的时候创建 , 每次获得的都是同一个
+			prototype , 多例模式 , 每次获得的时候 , 都是一个全新的对象
+			request , 在web环境下 , 与request生命周期相同
+			session , 在web环境下 , 与session生命周期相同
+			
+		init-method : 生命周期属性 , 创建对象的时候调用 
+			spring默认调用的是空参构造器 , 此方法相当于创建对象的时候 , 针对属性进行初始化操作
+			
+		destroy-mothod : 生命周期属性 , spring在关闭和销毁容器 \ 所有对象的时候调用
+		
+	2) spring创建对象的方式 : 
+		关键 : 使用反射 , 进行空参构造器的调用
+		
+		使用静态工厂的方式
+			在bean类中定义一个方法 , 这个方法的作用就是生产对象
+			然后把这个方法告诉spring即可
+			
+		实例工厂 
+			bean对象的工厂也是由自己创建
+			需要把工厂交给spring管理
+			还需要告诉spring调用自己创建的工厂的哪个方法来创建对象
+			
+	3) 引入其他spring配置文件
+		<import /> 
+		
+6 , <bean> 下的标签 : 就是在创建好的对象中 , 注入值
+	1) 使用set方式注入
+	
+		<property 标签
+			配置property标签 , 使用的是set方式注入
+			name 为bean对象属性
+			value 为值注入时候使用
+			ref 为对象注入时候使用
+			
+		p命名空间 : 属于set方式注入
+			(1) 引入p命名空间
+			(2) 在<bean标签 中使用 p:name = "值"  p:nam-ref = "对象"
+			
+		
+	2) 使用构造器注入 : 必须有对应的构造函数
+		<constructor-arg
+			name : 构造函数参数名
+			index : 构造函数参数索引
+			type : 构造函数参数类型
+			value : 值注入
+			ref : 对象注入
+			
+	3) 数组注入 , 如果只注入一个值 , 那么和普通的属性注入是一样的
+		(1) 数组使用的是set方式注入
+		(2) 必须使用<property标签进行注入
+			<property name="属性"
+				<array
+				
+			相当于 , 使用property标签 , 本来在输入值的时候 , 需要填具体的值
+				如果是数组的话 , 在写值的地方 , 填上 <array 标签即可
+				
+	4) list集合注入 , 必须使用<property标签进行注入
+		与数组注入一样 , 只是把<array 标签 换成了 <list标签
+		
+	5) map集合注入
+		1) 必须使用property标签注入方式 , 先填写bean属性
+		2) 在property标签下面填写 <map>标签
+		3) 在map标签中 , 填写键值对对象标签 <entry>
+		
+	6) property注入
+		1) 使用property标签注入方式
+		2) 在本来填写值的地方 , 填写<propes标签
+		3) 在propes标签下 , 加入具体的propperty
+		
+7 , 将crm项目中的servic层 \ dao层交给spring管理
+	
+	1) 原代码分析
+		与创建Bean \ 注入Bean有关的是 , 在每一层的属性中
+		UserService 中有关
+			UserDao ud = new UserDao() --> 创建UserDao给spring管理 --> <bean标签
+			ud = 对象 , 通过<property标签进行注入
+			
+		UserAction 暂时不给spring管理
+			所以他的注入也不能由spring完成
+			
+	2) 关于在web.xml中配置监听器
+		监听器的class 在org.springFreeMark.web包下的一个监听器
+		
+		还需要配置一个参数 , 这个参数从监听器的父类中寻找
+		这个参数的意思是将spring容器已经设到了servletContext作用域中了
+		所以关于怎么拿到spring容器应该从servletContext作用域拿 , 而不是自己去创建了
+		
+	3) 关于strust2 中Action的多例模式问题
+		每次请求都会创建一个全新的Action
+			Action中Service
+			Service中Dao
+		所以相当于每次请求都会创建全新的一套 Action \ Service \ Dao对象
+		
+		但是把service \ dao层交给spring管理后 , 每次获得的 service \ dao都只有一个而已
+
+			
+		
+		
+		
+		
+		
+		
+			
+			
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		

@@ -1,0 +1,197 @@
+框架:
+	1,框架是半成品项目
+	2,框架已经有很多功能,怎么使用功能是关键
+
+对hibernate框架的理解
+	程序操作的是对象 --> hibernate --> hibernate操作数据库
+	完成对数据库的操作通过中间层hibernate完成
+	所以说直接跟程序对接的是hibernate框架了
+	
+在使用hibernate的时候 , 操作数据库之前 , 一定要想好 , 这一步是否可以让hibernate来帮我们完成
+
+customer.hbm.xml配置文件 : 告诉hibernate多张表怎么与数据库进行交互
+
+	<hibernate-mapping />
+		<class name table >
+			<id>
+				<generate>
+			<property>
+	
+	关于hibernate-mapping 标签
+		package 属性 ,用来导入包的作用
+	
+	关于 id \ property 标签的属性中几个默认值
+		colum : 默认与实体相同
+		type : 默认与实体相同
+		length : 默认使用数据库支持的最大长度
+	
+		特殊的属性值 : not-null 非空 , 默认值是false , 配置为true是必须填
+		
+hibernate.cfg.xml主配置文件 : 告诉hibernate全部的表应该怎么与数据库进行交互
+	sissionfactory标签 , 需要配置 9 个属性
+		1) 去哪里寻找 : 找到hibernate官方文档 --> project示例工程 --> etc --> 有所有配置文件的模板
+			--> 找到hibernate.properties.template这个文档 , 有所有关于数据库的属性
+			
+		2) 4个关于mysql数据的配置 - 搜索 mysql
+		3) 1个关于数据库方言的配置 - 搜索 mysql - 选择最短的一个
+		4) 2个关于控制台打印sql语句的 - 搜索 show
+		5) 1个关于如何更新数据库表的配置 - 搜索 auto 自动更新表
+		6) 1个mapping , 映射orm元数据
+		
+hibernate 主键生成策略
+	assigned : 自然主键 , 比如user用户表中的身份证 , 这个需要程序员手动配置主键
+	native : 代理主键 , 代理主键的意思是将主键交给hibernate来管理 , 需要配置主键 为 Long 类型
+	uuid : uuid主键 , 随机生成字符串 , 需要配置主键为 String 类型
+	
+hibernate对象状态
+	首先对于三种状态来说 , 
+		(1)确实是看有无id值 , 但是这个id值与主键的生成策略有关系
+		(2)至于与session关联的话 , 调用任何的增删改查都会与session关联
+		(3)save()就是获得id , 然后设进去
+	
+	三种状态的特征:
+		(1)瞬时状态:new 出来的时候 , 这个时候对象存储在内存中,并且相对于数据库来说,没有id值
+		(2)持久化状态:在代理主键的状态下 , 这个对象已经被设了id值了 , 并且与session对象相关联了
+			当事务提交的时候 , 持久化状态的对象 , 会更新到硬盘中
+		(3)游离状态:session已经关闭 , 但是这个对象已经被设过id值的情况
+		
+		最终的目标:
+			要想把数据通过hibernate这个框架存储到数据库中 , 那么就是要把这个对象转换成持久化状态
+			当事务提交的时候 , 更新到硬盘
+			把任何状态下的对象无脑转换成持久化状态 : saveOrUpdate()方法
+	
+hibernate一级缓存
+	1,缓存都是为了提高操作效率的 : 为什么是提高操作效率呢 ? 因为电脑中速度最慢的是访问硬盘 
+		所以为了避免频繁的去硬盘访问数据 , 而是利用内存来做一个缓冲 , 是为缓存
+	2,在hibernate中 , hibernate这个框架的数据都是运行在内存中的 , 可以想象成hibernate是一个容器(内存里的框框)
+		1)当做查询操作的时候 , 先去hibernate这个框框中看下有无数据 , 
+			如果有 , 直接返回 , 此时访问的是内存数据
+			如果没有 , 再去访问硬盘的数据不迟
+		2)当做修改数据的时候 , 
+			首先可以做修改的数据都是hibernate这个框框中的数据(也就是上面所说的持久化状态的对象)
+			然后再hibernate的这个框框中,这个对象不是只有一份 , 而是两份 , 一份给你修改 , 一份留给自己做对比
+			最后,只有当两个对象不一致的时候 , 再去动硬盘中的数据
+		
+hibernate事务	
+	1,至于事务的提交
+		就是真的把内存中的数据存储到数据库(硬盘中)
+		
+	2,有关事务的概念 , 这是一个脱离hibernate存在的知识点
+	3,mysql数据库默认的事务隔离级别是 可重复度,兼顾安全与性能
+	
+	4,在项目中如何使用事务管理 , 每一点都很重要
+		1)事务是在service层中开启的
+		2)service要开启事务\提交事务 , 而dao层中要访问数据库
+			必须保证service层和dao层中的session是一个
+			如何保证在这个两个层中session是同一个呢 ? 
+				使用传递参数的形式来做 , 这样的话 , 比较low , 而且耦合较严重
+				使用将session绑定到ThreadLoad这个容器中
+		3)hibernate中如何获取绑定线程的session
+			(1) session factory getcurrent方法来获取得到session
+			(2) 需要在主配置文件中配置
+			(3) 与线程绑定的session会在事务提交的时候,自动关闭 , 不需要手动关闭session
+			
+hibernate中的多表
+	orm元数据中
+		配置记忆为 name 对应实体 colum 对应表中的外键项\外键项 class对应对方的类名
+	
+	当两个对象中 , 一个对象是瞬时状态 , 另一个是持久化状态时 , 只要将瞬时状态的对象转化为持久化状态即可
+	
+	当有两张有关系的表时 , 操作两张表的关系 , 就是操作两个类的set集合,来维护两个表的关系
+	
+	关于级联:主要是为了少写两行代码 , 总的来说 , 当我操作一方的时候 , 受影响的一方跟着操作
+		如果没有配置级联操作 , 那么只保存一方 , 会报错的
+	关于控制反转:主要是为了提升性能 , 为什么可以提升性能呢 ? 减少了对数据库更新的操作
+		本来设置外键应该又多的一方来完成 , 因为外键本身在多的一方
+		所以一的一方的应该放弃多余的一次去更新数据库的操作
+		
+hibernate的查询
+	根据id查询单张表的单个对象时 , 一定不要使用hql语句查询
+		使用get(Product.class , id);
+	使用Hql语句查询(常用)
+		排序查询
+			from Customer order by desc; 倒序查询
+		条件查询
+			from Customer where cust_id > :id
+			query.setParamer("id" , 2L);
+		分页查询
+			使用fist max()方法来做
+			可以与条件查询配合使用
+		聚合查询
+			sql : select count(*) from Customer
+					select avg(cust_id) from Customer
+					select max(cust_id) from Customer
+					select min(cust_id) from Customer
+		投影查询 : 首先理解概念 , 投影查询就是查询Customer类的部分属性
+			前提条件 , 提供需要查询的属性的对应构造器 , 不要忘了默认构造器
+			
+			sql : select new Customer(cust_id , cust_name) from Customer;
+		
+		多表查询 : 首先对sql语句的多表查询有一定的概念 , 其中最主要的还是内连接
+			内连接查询
+				普通内连接:
+					from customer c inner join c.linkmans
+					关于这条查询语句 , 没有where这个关键字 , 像是customer自己与自己的属性做内链接
+					总的来说 , 一定要记住 , 这是hibernate的设定 , 最终还是会转化为sql语句去执行
+					查询的结果是一个数组集合 , 就是把查询的结果封装到一个数组中 , 然后把多条查询结果放在list集合中
+				迫切内连接:
+					from Customer c inner join fetch c.linkMans
+					查询的结果就是customer集合 , hibernate帮我们把查询出来的对应linkMans的set集合设在了customer对象中
+					
+					迫切内连接 与 普通连接对比的话 , 相当与告诉hibernate把查询的结果处理下 , 封装在一个对象中 .
+						就是说这个hql语句的关键字 , 而不是sql语句的关键字
+					
+					迫切内连接后可以添加 where 条件 . 
+					
+	针对hql语句的优化
+		类级别优化 : 就是针对单表查询的优化
+			class标签,lazy属性 : 类级别的优化 , 如果使用get方法是 , 是立即向数据库做查询 
+			如果使用的load方法 , 那么就可以配置了 , lazy = "true" 那么是懒加载 , 只有在使用时才加载
+			lazy为false则关闭懒加载 , 就是立即加载
+			如何实现懒加载 : 是通过代理类来实现的
+		
+		集合策略 : 针对多表关联查询的优化
+			这是在查询Customer时,怎么加载linkmans的这个set集合
+			查询主表某一项数据 , 然后把从表中关于这一项的数据查询出来
+			在set集合中配置
+				lazy默认值为true
+				fetch默认值为select
+		关联属性策略 :　针对多表关联查询的优化
+			这是在查询linkman时 , 怎么加载Customer的这个属性
+			查询从表某一项数据时 , 然后把与主表关于这一项的数据查询出来
+			在many-to-one这个标签中配置
+				lazy默认值为true
+				fetch默认值为select
+				
+		bitch-size : 针对多表关联查询的优化
+			这是在主表中 , 查询从表的数据时 , 可以优化的地方
+			在查询customer是 , 查询linkmans这个属性
+			指定一次性查询几条linkman数据
+			
+			在Customer --> set标签中使用
+		
+		总的来说 , 这是关于多表关联查询属性的配置
+		
+		no-session问题:
+			针对上面多表查询lazy \ 迫切 fetch属性的配置 , 那么在多表查询时 , 会有no-session的问题
+			这个问题的产生原因:
+				首先是使用懒加载策略才有这个问题
+				为什么使用懒加载会有这个问题 , 因为懒加载的时候 , 真正使用的时候是在jsp中 , 在jsp中才会真正使用, 然后去查询数据库
+					而这个时候需要用到session
+					但是session在service中关闭了
+			问题的解决:
+				暴力解决 : 不关闭session
+				推荐解决 : 配置一个filter , 过滤器 , 将session的作用域扩大到三层 
+					即在filter中 , 在放行之前获取session , 在执行完三层后 , 再关闭session
+			
+	使用sql语句查询(应对复杂情况)
+		
+当报错信息是opensession错误时 , 一般是配置文件出错了!!!!
+
+对于刚从页面传到服务器的数据,然后在页面回显
+	此时这个数据在param作用域中
+	所以在前端可以直接用${param.cust_name}显示出来
+		比如在做查询条件时的回显 , 这样显得高端
+		
+	因为前端默认时从requst域查找数据 , 没有包含更低级的param作用域的数据
+		所以需要手动配置 , 在param作用域查找数据

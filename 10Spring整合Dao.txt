@@ -1,0 +1,110 @@
+1 , 操作数据库常用的技术有
+	JDBC
+	Hibernate
+	mybaties
+	
+	sping管理数据库的对象结构
+		DaoSupport
+			jdbcDaoSupport
+			hibernateDaoSupport
+
+2 , 以JDBC为例 , spring提供了一个对象 , 封装了jdbc对象 , 封装的是最底层的jdbc对象
+	
+	这个对象称为JDBC的模板对象
+	当然还有针对Hibernate的对象 , spring也进行了封装
+	
+3 , JDBCTemplate 里面含有 JDBC对象 , 对其进行了封装
+	只是简单的对其进行了封装 , 就像DbUtils中一个很小的框架
+
+4 , 针对连接池的操作 , 一般使用的是C3P0连接池
+	1) 导包
+	2) 创建连接池对象
+	3) 根据创建的连接池对象 , 设置连接数据库的参数
+	4) 从连接池中获得连接
+	
+	对于连接池 , 不要想复杂了 , 其实也是一个对象 , 
+	这个对象里面存储了很多连接而已 , 在我们学的多例模式中就有说到这种情况
+	总的来说 , 连接池是一个对象 , 只不过这个对象中封装了很多连接而已 , 就像spring也是一种容器 , 然后容器中有很多对象
+	
+	当创建好一个连接池对象后 , 需要配置下 , 连接哪个数据库
+	
+5 , 使用
+	
+	理解 : 
+		dao层实现类 --> jdbcTemplate --> 封装了jdbc \ 连接池
+	
+	1) 导包
+		需要连接池的包 , 从spring提供的外部包文件夹中获得
+		需要数据库驱动
+		
+		spring需要jdbc的包
+		spring需要tx事务的包
+	
+	2) 准备数据库
+		在数据库中建立对应的表格
+	
+	3) 要想在Dao层使用springjdbc模板 , 就要继承 JabcDaoSupport
+		然后在dao层实现类中可以使用Spring提供的jdbc模板的方法
+		
+	4) 在applicationContext.xml中的配置
+		(1) 将数据库连接池对象交给spring管理
+			
+			在配置连接池bean时 , 需要配置连接池的参数
+			需要使用<property标签配置参数
+				在设置参数的时候 , 需要用到读取外部文件 , 需要用到<context标签指定外部文件
+				指定外部文件后 , 需要在文件中引用外部的数据
+					${外部文件的 = 前头}
+					
+		(2) 配置jdbcTemplete对象
+			在对象中注入 连接池 bean
+			
+			直接配置jdbcTempletebean即可 , 相当于这个类不是我们自己创建的 , 是spring创建的 , 我们使用而已
+			
+		(3) 配置dao层实现类的bean
+			将jdbcTempletebean注入进去
+			
+			因为dao层实现类 , 直接有setJdbcTeplete()方法 , 所有可以通过bean直接设入进去
+			
+			如果使用注解将jdbcTemplete设入进去的话 , 再Dao层重写setJdbcTemplete()方法即可 , 然后在上面使用自动注入注解
+			或者说 , jdbcTemplate不支持注解方式
+			
+	5) 使用
+		获得DAO层实现类对象 , 调用其方法即可
+			
+				
+		
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

@@ -1,0 +1,6 @@
+1 , 将之前完成的crm项目service层 \ dao层交给spring管理 
+	主要是搭建spring框架 , 在主配置文件中配置<bean , 以及spring中如何依赖注入
+2 , 演示注解配置bean , 演示spring使用hibernateTemplement进行增删该查 , 演示xml配置事务\注解配置事务
+
+3 , 完成SSH三大框架的整合 , 并完成用户登陆
+	
